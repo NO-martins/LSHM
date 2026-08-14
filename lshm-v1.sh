@@ -51,3 +51,17 @@ if [ "$DISK_USAGE" -gt "$THRESHOLD_DISK" ]; then
 else
 	echo "[SUCCESS] Disk Space is healthy: ${DISK_USAGE}%"
 fi
+
+# ========================================================= 
+# MODULE 2: RAM/MEMORY MONITOR
+# ========================================================= 
+# LOGIC: Navigate to Mem from 'free' then (calculate used / total) * 100, and format as integer.
+RAM_USAGE=$(free | awk '/Mem:/ {printf "%.0f", $3/$2 * 100}')
+
+
+# --- Meomry Evaluation Metric ---
+if [ "$RAM_USAGE" -gt "$THRESHOLD_RAM" ]; then
+	echo "[wARNING] RAM Usage is dangerously high: ${RAM_USAGE}% (Limit: ${THRESHOLD_RAM}%)"
+else
+	echo "[SUCCESS] RAM Usage is healthy: ${RAM_USAGE}%"
+fi
