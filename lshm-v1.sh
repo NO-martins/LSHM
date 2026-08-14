@@ -52,6 +52,7 @@ else
 	echo "[SUCCESS] Disk Space is healthy: ${DISK_USAGE}%"
 fi
 
+
 # ========================================================= 
 # MODULE 2: RAM/MEMORY MONITOR
 # ========================================================= 
@@ -64,4 +65,21 @@ if [ "$RAM_USAGE" -gt "$THRESHOLD_RAM" ]; then
 	echo "[wARNING] RAM Usage is dangerously high: ${RAM_USAGE}% (Limit: ${THRESHOLD_RAM}%)"
 else
 	echo "[SUCCESS] RAM Usage is healthy: ${RAM_USAGE}%"
+fi
+
+
+
+# ========================================================
+# MODULE 3: CPU USAGE MONITOR
+# ========================================================
+# LOGIC: Basically isolates '%Cpu(s);, grabs the idle element, and subtract from 100%
+CPU_USAGE=$(top -bn1 | grep "%Cpu(s)" | awk '{print 100 - $8}' | cut -d. -f1) # -d. to drop decimal point and -f1 to turn floating value to integer
+
+
+# --- CPU Evaluation ---
+if [ "$CPU_USAGE" -gt "$THRESHOLD_CPU" ]; then
+	echo "[WARNING] CPU Load is critically high: ${CPU_USAGE}% (Limit: ${THRESHOLD_CPU}%)"
+	((ERROR_COUNT++))
+else
+	echo "[SUCCESS] CPU Usage is healthy: ${CPU_USAGE}%"
 fi
