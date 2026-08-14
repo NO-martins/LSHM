@@ -1,3 +1,53 @@
 #!/bin/bash
 
-echo "LSHM Prototype"
+# ============================================================
+# Name: 	Linux System Health Monitor (LSHM)
+# Purpose:	Utility to monitor core OS performance metrics
+# ============================================================ 
+
+# ---  Thresholds ---
+# These limits are based on the industrial-standard site reliability engineering (SRE)
+
+
+THRESHOLD_CPU=85	# Trigger warning if CPU usage exceeds 85%
+THRESHOLD_RAM=85	# Trigger warning if physical memory usage exceeds 85%
+THRESHOLD_DISK=90	# Trigger warning if root file system exceeds 90%
+PING_TARGET="8.8.8.8"	# Highly reliable Public DNS server to test for conectivity
+
+ERROR_COUNT=0
+# An error counter to measure the number of errors for the log file
+
+# --- Log Management ---
+# The software uses a clean, system logging. Located safely within user space.
+
+LOG_FILE="$HOME/bin/lshm/lshm-sys.log"
+
+# --- Initialization & Timestamp Generation ---
+# The software gets the exact system date and time
+
+TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S") 
+cat << _EOF_
+==============================================================
+		LINUX SYSTEM HEALTH MONITOR (LSHM)
+		Generated: $TIMESTAMP
+=============================================================
+_EOF_
+
+# ============================================================
+# MODULE 1: DISK SPACE MONITOR
+# ============================================================
+# LOGIC: Extract root file system in readable human text with df /, then grab the field 5 using 'awk' to isolate just the 5th colum, sed then strip off the % to leave an integer
+DISK_USAGE=$(df / | awk '$NF=="/"{gsub("%","",$5);print $5}') 
+
+
+# --- Disk Space Evaluation Logic ---
+# The software compares the live disk integer against the global threshold config
+
+if [ "$DISK_USAGE" -gt "$THRESHOLD_DISK" ]; then
+	echo "[WARNING] Disk Space is Critically low: ${DISK_USAGE}% (Limit: ${THRESHOLD_DISK}%"
+
+	# Track the failure with an increment to counter
+	((ERROR_COUNT++))  
+else
+	echo "[SUCCESS] Disk Space is healthy: ${DISK_USAGE}%"
+fi
