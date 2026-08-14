@@ -92,11 +92,20 @@ fi
 
 
 # --- Network Status Evaluation---
-ping -c 1 "$PING_TARGET" > /dev/null 2>&1
+ping -c 1 -W 2 -w 2  "$PING_TARGET" > /dev/null 2>&1
 # Check exit status of of ping immediately
 if [ "$?" -eq 0 ]; then
 	echo "[SUCCESS] Network Connection: Connected"
 else
 	echo "[WARNING] Network Connection: Disconnected or Unreachable"
+	cat << _EOF_
+[Troubleshooting Steps]
+1. Hardware:  Check network cables or Wifi status
+2. Gateway:   Try pinging your Local router IP
+3. Firewall:  Ensure security rules allows outbound ICMP
+4. IP config: Verify your machine has a valid IP address
+_EOF_
+
+
 	((ERROR_COUNT++))
 fi
