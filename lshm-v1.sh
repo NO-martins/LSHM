@@ -63,10 +63,10 @@ RAM_USAGE=$(free | awk '/Mem:/ {printf "%.0f", $3/$2 * 100}')
 # --- Meomry Evaluation Metric ---
 if [ "$RAM_USAGE" -gt "$THRESHOLD_RAM" ]; then
 	echo "[wARNING] RAM Usage is dangerously high: ${RAM_USAGE}% (Limit: ${THRESHOLD_RAM}%)"
+	((ERROR_COUNT++)) 
 else
 	echo "[SUCCESS] RAM Usage is healthy: ${RAM_USAGE}%"
 fi
-
 
 
 # ========================================================
@@ -82,4 +82,21 @@ if [ "$CPU_USAGE" -gt "$THRESHOLD_CPU" ]; then
 	((ERROR_COUNT++))
 else
 	echo "[SUCCESS] CPU Usage is healthy: ${CPU_USAGE}%"
+fi
+
+
+# ======================================================= 
+# MODULE 4: NETWORK STATUS MONITOR
+# =======================================================
+# LOGIC: Silently ping the target IP and evaluate the execution exit status code.
+
+
+# --- Network Status Evaluation---
+ping -c 1 "$PING_TARGET" > /dev/null 2>&1
+# Check exit status of of ping immediately
+if [ "$?" -eq 0 ]; then
+	echo "[SUCCESS] Network Connection: Connected"
+else
+	echo "[WARNING] Network Connection: Disconnected or Unreachable"
+	((ERROR_COUNT++))
 fi
