@@ -27,10 +27,10 @@ LOG_FILE="$HOME/bin/lshm/lshm-sys.log"
 
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S") 
 cat << _EOF_
-|=============================================================|
+==============================================================
 		LINUX SYSTEM HEALTH MONITOR (LSHM)
 		Generated: $TIMESTAMP
-|=============================================================|
+=============================================================
 _EOF_
 
 # ============================================================
@@ -45,11 +45,11 @@ DISK_USAGE=$(df / | awk '$NF=="/"{gsub("%","",$5);print $5}')
 
 if [ "$DISK_USAGE" -gt "$THRESHOLD_DISK" ]; then
 	echo "[WARNING] Disk Space is Critically low: ${DISK_USAGE}% (Limit: ${THRESHOLD_DISK}%"
-	echo""
+
+	# Track the failure with an increment to counter
 	((ERROR_COUNT++))  
 else
 	echo "[SUCCESS] Disk Space is healthy: ${DISK_USAGE}%"
-	echo""
 fi
 
 
@@ -63,11 +63,9 @@ RAM_USAGE=$(free | awk '/Mem:/ {printf "%.0f", $3/$2 * 100}')
 # --- Meomry Evaluation Metric ---
 if [ "$RAM_USAGE" -gt "$THRESHOLD_RAM" ]; then
 	echo "[wARNING] RAM Usage is dangerously high: ${RAM_USAGE}% (Limit: ${THRESHOLD_RAM}%)"
-	echo""
 	((ERROR_COUNT++)) 
 else
 	echo "[SUCCESS] RAM Usage is healthy: ${RAM_USAGE}%"
-	echo""
 fi
 
 
@@ -81,11 +79,9 @@ CPU_USAGE=$(top -bn1 | grep "%Cpu(s)" | awk '{print 100 - $8}' | cut -d. -f1) # 
 # --- CPU Evaluation ---
 if [ "$CPU_USAGE" -gt "$THRESHOLD_CPU" ]; then
 	echo "[WARNING] CPU Load is critically high: ${CPU_USAGE}% (Limit: ${THRESHOLD_CPU}%)"
-	echo""
 	((ERROR_COUNT++))
 else
 	echo "[SUCCESS] CPU Usage is healthy: ${CPU_USAGE}%"
-	echo""
 fi
 
 
@@ -96,54 +92,13 @@ fi
 
 
 # --- Network Status Evaluation---
-ping -c 1 -W 2 -w 2  "$PING_TARGET" > /dev/null 2>&1
+ping -c 1 "$PING_TARGET" > /dev/null 2>&1
 # Check exit status of of ping immediately
 if [ "$?" -eq 0 ]; then
 	echo "[SUCCESS] Network Connection: Connected"
 else
-	echo "[WARNING] Network Connection: Disconnected or Unreachable"
-	cat << _EOF_
-[Troubleshooting Steps]
-1. Hardware:  Check network cables or Wifi status
-2. Gateway:   Try pinging your Local router IP
-3. Firewall:  Ensure security rules allows outbound ICMP
-4. IP config: Verify your machine has a valid IP address
-_EOF_
-
-
+	echo "[WARNING] Network Connection: Disconnected or Unreachable
+	Check your Network cable and is the Router active?
+	Is your security software blocking ICMP (ping) request (firewall)"
 	((ERROR_COUNT++))
-fi
-
-
-# =========================================================
-# MODULE 5: FINAL HEALTH SUMMARY
-# =========================================================
-# LOGIC: Check the final value of ERROR_COUNT. If 0- system is flawless, Otherwise state system breaches
-
-echo""
-echo""
-echo "-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-"
-
-if [ "$ERROR_COUNT" -eq 0 ]; then
-	MAIN_MSG="Your system is in Perfect condition"
-	DEVICE_STATE="HEALTHY"
-else
-	MAIN_MSG="ATTENTION REQUIRED. Performance Anomalies detected."
-	DEVICE_STATE="DEGRADED ($ERROR_COUNT warning(s) logged)"
-fi
-
-echo ">>> STATUS: $MAIN_MSG"
-echo ">>> LSHM found your device: [$DEVICE_STATE]"
-echo "==============================================================="
-
-# Append precise log line to .txt file
-
-if [ "$ERROR_COUNT" -eq 0 ]; then
-	echo "$TIMESTAMP [SUCCESS] LSHM_MAIN: System check completed successfully. State: $DEVICE_STATE" >> "$LOG_FILE"
-	echo""
-	echo " See lshm-sys.log file for further information"
-else
-	echo "$TIMESTAMP [ERROR] LSHM_MAIN: System completed with active alerts. State: $DEVICE_STATE" >> "$LOG_FILE"
-	echo""
-	echo "See lshm-sys.log file for further information"
 fi
