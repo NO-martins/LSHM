@@ -43,7 +43,7 @@ echo -e "|=============================================================|"
 # MODULE 1: DISK SPACE MONITOR
 # ============================================================
 # LOGIC: Extract root file system in readable human text with df /, then grab the field 5 using 'awk' to isolate just the 5th colum, sed then strip off the % to leave an integer
-DISK_USAGE=$(df / | awk '$NF=="/"{gsub("%","",$5);print $5}') 
+DISK_USAGE=$(df / | awk '$NF=="/"{gsub("%","",$5);print $(NF-1)}') 
 
 
 # --- Disk Space Evaluation Logic ---
