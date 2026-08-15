@@ -17,6 +17,12 @@ PING_TARGET="8.8.8.8"	# Highly reliable Public DNS server to test for conectivit
 ERROR_COUNT=0
 # An error counter to measure the number of errors for the log file
 
+# --- Terminal UI Colors ---
+COLOR_RESET="\e[0m"	# Reset terminal color to normal
+COLOR_TIME="\e[38;5;117m"	# Blue for Timestamp
+COLOR_SUCCESS="\e[92m"	# Green for Healthy state
+COLOR_ERROR="\e[91m"	# Red for absolute failures
+
 # --- Log Management ---
 # The software uses a clean, system logging. Located safely within user space.
 
@@ -26,12 +32,12 @@ LOG_FILE="$HOME/bin/lshm/lshm-sys.log"
 # The software gets the exact system date and time
 
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S") 
-cat << _EOF_
-|=============================================================|
-		LINUX SYSTEM HEALTH MONITOR (LSHM)
-		Generated: $TIMESTAMP
-|=============================================================|
-_EOF_
+
+echo -e "|=============================================================|"
+echo -e "		LINUX SYSTEM HEALTH MONITOR (LSHM)"
+echo -e "		Generated: ${COLOR_TIME}$TIMESTAMP${COLOR_RESET}"
+echo -e "|=============================================================|"
+
 
 # ============================================================
 # MODULE 1: DISK SPACE MONITOR
@@ -44,11 +50,11 @@ DISK_USAGE=$(df / | awk '$NF=="/"{gsub("%","",$5);print $5}')
 # The software compares the live disk integer against the global threshold config
 
 if [ "$DISK_USAGE" -gt "$THRESHOLD_DISK" ]; then
-	echo "[WARNING] Disk Space is Critically low: ${DISK_USAGE}% (Limit: ${THRESHOLD_DISK}%"
+	echo -e "${COLOR_ERROR}[WARNING]${COLOR_RESET} Disk Space is Critically low: ${DISK_USAGE}% (Limit: ${THRESHOLD_DISK}%"
 	echo""
 	((ERROR_COUNT++))  
 else
-	echo "[SUCCESS] Disk Space is healthy: ${DISK_USAGE}%"
+	echo -e "${COLOR_SUCCESS}[SUCCESS]${COLOR_RESET} Disk Space is healthy: ${DISK_USAGE}%"
 	echo""
 fi
 
@@ -62,11 +68,11 @@ RAM_USAGE=$(free | awk '/Mem:/ {printf "%.0f", $3/$2 * 100}')
 
 # --- Meomry Evaluation Metric ---
 if [ "$RAM_USAGE" -gt "$THRESHOLD_RAM" ]; then
-	echo "[wARNING] RAM Usage is dangerously high: ${RAM_USAGE}% (Limit: ${THRESHOLD_RAM}%)"
+	echo -e "${COLOR_ERROR}[wARNING]${COLOR_RESET} RAM Usage is dangerously high: ${RAM_USAGE}% (Limit: ${THRESHOLD_RAM}%)"
 	echo""
 	((ERROR_COUNT++)) 
 else
-	echo "[SUCCESS] RAM Usage is healthy: ${RAM_USAGE}%"
+	echo -e "${COLOR_SUCCESS}[SUCCESS]${COLOR_RESET} RAM Usage is healthy: ${RAM_USAGE}%"
 	echo""
 fi
 
@@ -80,11 +86,11 @@ CPU_USAGE=$(top -bn1 | grep "%Cpu(s)" | awk '{print 100 - $8}' | cut -d. -f1) # 
 
 # --- CPU Evaluation ---
 if [ "$CPU_USAGE" -gt "$THRESHOLD_CPU" ]; then
-	echo "[WARNING] CPU Load is critically high: ${CPU_USAGE}% (Limit: ${THRESHOLD_CPU}%)"
+	echo -e "${COLOR_ERROR}[WARNING]${COLOR_RESET} CPU Load is critically high: ${CPU_USAGE}% (Limit: ${THRESHOLD_CPU}%)"
 	echo""
 	((ERROR_COUNT++))
 else
-	echo "[SUCCESS] CPU Usage is healthy: ${CPU_USAGE}%"
+	echo -e "${COLOR_SUCCESS}[SUCCESS]${COLOR_RESET} CPU Usage is healthy: ${CPU_USAGE}%"
 	echo""
 fi
 
@@ -99,9 +105,9 @@ fi
 ping -c 1 -W 2 -w 2  "$PING_TARGET" > /dev/null 2>&1
 # Check exit status of of ping immediately
 if [ "$?" -eq 0 ]; then
-	echo "[SUCCESS] Network Connection: Connected"
+	echo -e "${COLOR_SUCCESS}[SUCCESS]${COLOR_RESET} Network Connection: Connected"
 else
-	echo "[WARNING] Network Connection: Disconnected or Unreachable"
+	echo -e "${COLOR_ERROR}[WARNING]${COLOR_RESET} Network Connection: Disconnected or Unreachable"
 	cat << _EOF_
 [Troubleshooting Steps]
 1. Hardware:  Check network cables or Wifi status
